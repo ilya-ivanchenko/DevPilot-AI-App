@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: 'postgres:latest'
+    container_name: devpilot-postgres
+    environment:
+      POSTGRES_DB: devpilot
+      POSTGRES_USER: devpilot
+      POSTGRES_PASSWORD: devpilot
+    ports:
+      - '5432'
+
+  redis:
+    image: 'redis:latest'
+    container_name: devpilot-redis
+    ports:
+      - '6379'
+
+#     add   app
