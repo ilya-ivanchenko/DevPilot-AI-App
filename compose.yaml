@@ -15,4 +15,9 @@ services:
     ports:
       - '6379'
 
+#  app:
+#    build: .
+#    env_file:
+#      - .env
+
 #     add   app

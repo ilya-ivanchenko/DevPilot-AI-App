@@ -15,4 +15,12 @@ server:
 
 logging:
   level:
+    root: INFO
+    com.example: INFO
     org.springframework.web.reactive.function.client: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %5p [%15.15t] %-40.40logger{39} : %m%n"
+
+telegram:
+  token: ${TELEGRAM_BOT_TOKEN:}
+  polling-interval: 3s
