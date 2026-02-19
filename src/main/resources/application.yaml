@@ -24,3 +24,5 @@ logging:
 telegram:
   token: ${TELEGRAM_BOT_TOKEN:}
   polling-interval: 3s
+
+
