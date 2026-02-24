@@ -2,7 +2,7 @@ spring:
   application:
     name: 'devpilot-ai'
   r2dbc:
-    url:  'r2dbc:postgresql://localhost:5432/devpilot'
+    url: 'r2dbc:postgresql://localhost:5432/devpilot'
     username: 'devpilot'
     password: 'devpilot'
   data:
@@ -25,4 +25,17 @@ telegram:
   token: ${TELEGRAM_BOT_TOKEN:}
   polling-interval: 3s
 
+llm:
+  api-key: ${OPENAI_API_KEY:}
+  base-url: 'https://api.openai.com'
+  model: 'gpt-4o-mini'
+  timeout: 60s
+  prompts:
+    review-system: "You are a code reviewer. Analyze the code or diff provided. Focus on: bugs, style, security, complexity, and suggest improvements. Reply in the same language as the code comments or in English. Be concise."
 
+app:
+  messages:
+    review-empty: "Send code or a public GitHub PR link after /review. Example: /review https://github.com/owner/repo/pull/123"
+    review-public-only: "Only public GitHub repositories are supported. Private repos are not supported."
+    review-error: "Review failed. Please try again or check the link/code."
+    review-timeout: "Request timed out. Try a smaller snippet or PR."
