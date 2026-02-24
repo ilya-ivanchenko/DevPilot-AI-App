@@ -3,7 +3,7 @@ package com.example.util;
 import java.util.regex.Pattern;
 
 public class StringUtil {
-    
+
     private StringUtil() {
     }
 
