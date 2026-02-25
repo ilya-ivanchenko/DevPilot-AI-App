@@ -10,8 +10,27 @@ import org.springframework.context.annotation.Configuration;
 @Getter
 @Setter
 public class AppMessagesConfig {
-    private String reviewEmpty;
-    private String reviewPublicOnly;
-    private String reviewError;
-    private String reviewTimeout;
+    private Review review = new Review();
+    private Interview interview = new Interview();
+
+
+    @Getter
+    @Setter
+    public static class Review {
+        private String empty;
+        private String publicOnly;
+        private String error;
+        private String timeout;
+    }
+
+
+    @Getter
+    @Setter
+    public static class Interview {
+        private String empty;
+        private String error;
+        private String timeout;
+        private String stop;
+        private String intro;
+    }
 }

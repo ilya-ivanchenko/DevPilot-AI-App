@@ -26,13 +26,61 @@ public class LlmClient {
 
     public Mono<String> review(String userContent) {
         String systemPrompt = llmConfig.getPrompts().getReviewSystem();
+        List<OpenAiRequest.Message> messages = List.of(
+                OpenAiRequest.Message.builder().role("system").content(systemPrompt).build(),
+                OpenAiRequest.Message.builder().role("user").content(userContent).build()
+        );
+        return executeChatCompletion(messages);
+    }
+
+    public Mono<String> startInterview(String topic) {
+        String systemPrompt = llmConfig.getPrompts().getInterviewSystem();
+        String userPrompt = "Start a technical interview on topic: \"" + topic
+                + "\". Ask only the first question.";
+        List<OpenAiRequest.Message> messages = List.of(
+                OpenAiRequest.Message.builder().role("system").content(systemPrompt).build(),
+                OpenAiRequest.Message.builder().role("user").content(userPrompt).build()
+        );
+        return executeChatCompletion(messages);
+    }
+
+    public Mono<String> continueInterview(String topic, String userAnswer) {
+        String systemPrompt = llmConfig.getPrompts().getInterviewSystem();
+        String userPrompt = "User answer in interview on topic \"" + topic + "\":\n"
+                + userAnswer
+                + "\n\nBased on this answer, ask the next question. Do not repeat previous questions or answers.";
+        List<OpenAiRequest.Message> messages = List.of(
+                OpenAiRequest.Message.builder().role("system").content(systemPrompt).build(),
+                OpenAiRequest.Message.builder().role("user").content(userPrompt).build()
+        );
+        return executeChatCompletion(messages);
+    }
+
+    public Mono<String> finishInterview(String topic, List<String> answers) {
+        String systemPrompt = llmConfig.getPrompts().getInterviewSystem();
+        StringBuilder sb = new StringBuilder();
+        String headerTemplate = llmConfig.getPrompts().getInterviewFinishHeader();
+        sb.append(String.format(headerTemplate, topic)).append("\n\n");
+        for (int i = 0; i < answers.size(); i++) {
+            sb.append(i + 1)
+                    .append(") ")
+                    .append(answers.get(i))
+                    .append("\n\n");
+        }
+        String instruction = llmConfig.getPrompts().getInterviewFinishInstruction();
+        sb.append(instruction);
+
+        List<OpenAiRequest.Message> messages = List.of(
+                OpenAiRequest.Message.builder().role("system").content(systemPrompt).build(),
+                OpenAiRequest.Message.builder().role("user").content(sb.toString()).build()
+        );
+        return executeChatCompletion(messages);
+    }
+
+    private Mono<String> executeChatCompletion(List<OpenAiRequest.Message> messages) {
         var request = OpenAiRequest.builder()
                 .model(llmConfig.getModel())
-                .messages(List.of(
-                        OpenAiRequest.Message.builder().role("system").content(systemPrompt)
-                                .build(),
-                        OpenAiRequest.Message.builder().role("user").content(userContent).build()
-                ))
+                .messages(messages)
                 .maxTokens(MAX_TOKENS)
                 .build();
 

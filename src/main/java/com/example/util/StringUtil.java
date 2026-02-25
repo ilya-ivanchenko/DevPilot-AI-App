@@ -22,18 +22,17 @@ public class StringUtil {
             Commands:
             /review — code review (paste code or PR link)
             /interview <topic> — interview mode (e.g. /interview spring)
+            /stop — end current interview and return to main commands
             """;
 
     public static final String CMD_START = "/start";
     public static final String CMD_REVIEW = "/review";
     public static final String CMD_INTERVIEW = "/interview";
+    public static final String CMD_STOP = "/stop";
 
-    public static final String INTERVIEW_STUB =
-            "Interview Coach mode. Specify a topic, e.g. /interview spring.";
     public static final String HELP =
-            "Use /start for commands, /review for code review, /interview <topic> for interview.";
+            "Use /start to see commands, /review for code review, /interview <topic> for interview, /stop to end interview and then choose next command.";
 
     public static final String CHAT_COMPLETIONS_PATH = "/v1/chat/completions";
     public static final int MAX_TOKENS = 2048;
-    //public static final String DEFAULT_SYSTEM_PROMPT = "You are a code reviewer. Analyze the code provided. Be concise.";
 }

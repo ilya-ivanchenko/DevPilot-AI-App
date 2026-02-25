@@ -30,12 +30,23 @@ llm:
   base-url: 'https://api.openai.com'
   model: 'gpt-4o-mini'
   timeout: 60s
+  interview-max-questions: 1
   prompts:
     review-system: "You are a code reviewer. Analyze the code or diff provided. Focus on: bugs, style, security, complexity, and suggest improvements. Reply in the same language as the code comments or in English. Be concise."
+    interview-system: "You are an experienced technical interviewer and mentor. Conduct a structured interview by asking one question at a time on the given topic, starting from basics and gradually increasing complexity. Give short, clear questions without answers or hints. Always ask questions in English, regardless of the user's language."
+    interview-finish-header: 'Here are the user''s answers during a technical interview on topic "%s":'
+    interview-finish-instruction: "Based on these answers, give brief feedback about the candidate's level, strengths, and gaps. Give an overall numeric score from 0.0 to 5.0 (with one decimal place), and explicitly state the candidate's seniority level using labels like junior, junior+, middle, middle+, senior, senior+ (or higher if appropriate). Suggest what to study next. Do not ask more questions. Reply concisely."
 
 app:
   messages:
-    review-empty: "Send code or a public GitHub PR link after /review. Example: /review https://github.com/owner/repo/pull/123"
-    review-public-only: "Only public GitHub repositories are supported. Private repos are not supported."
-    review-error: "Review failed. Please try again or check the link/code."
-    review-timeout: "Request timed out. Try a smaller snippet or PR."
+    review:
+      empty: "Send code or a public GitHub PR link after /review. Example: /review https://github.com/owner/repo/pull/123"
+      public-only: "Only public GitHub repositories are supported. Private repos are not supported."
+      error: "Review failed. Please try again or check the link/code."
+      timeout: "Request timed out. Try a smaller snippet or PR."
+    interview:
+      empty: "Interview Coach mode. Specify a topic, e.g. /interview spring."
+      error: "Interview request failed. Please try again."
+      timeout: "Request timed out. Try again."
+      stop: "Interview ended. You can now use /review for code review or /interview <topic> to start a new one."
+      intro: "We will go through %d interview questions on this topic. Answer each briefly and clearly."
