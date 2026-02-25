@@ -1,8 +1,5 @@
 package com.example.telegram;
 
-import com.example.config.AppMessagesConfig;
-import com.example.github.GitHubClient;
-import com.example.llm.LlmClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
@@ -10,32 +7,20 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeoutException;
-
 import static com.example.util.StringUtil.CMD_INTERVIEW;
 import static com.example.util.StringUtil.CMD_REVIEW;
 import static com.example.util.StringUtil.CMD_START;
 import static com.example.util.StringUtil.HELP;
 import static com.example.util.StringUtil.INTERVIEW_STUB;
+import static com.example.util.StringUtil.REVIEW_STUB;
 import static com.example.util.StringUtil.WELCOME;
 import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class TelegramUpdateHandler {
     private final TelegramClient telegramClient;
-    private final LlmClient llmClient;
-    private final AppMessagesConfig appMessages;
-    private final GitHubClient githubClient;
-
-    /**
-     * Chat IDs waiting for the next message as /review payload (code or PR link).
-     */
-    private final Set<Long> waitingForReviewPayload = ConcurrentHashMap.newKeySet();
 
     public Mono<Void> handleRawUpdate(TelegramUpdateResponse response) {
         if (!response.isOk() || response.getResult().isEmpty()) {
@@ -57,62 +42,16 @@ public class TelegramUpdateHandler {
                     var trimmed = text.trim();
                     logIncomingMessage(chatId, trimmed);
 
-                    if (waitingForReviewPayload.remove(chatId) && !trimmed.startsWith("/")) {
-                        return handleReview(chatId, trimmed);
-                    }
-
                     String command = trimmed.split("\\s+", 2)[0];
-                    switch (command) {
-                        case CMD_START -> {
-                            String welcome = WELCOME + "\n" + appMessages.getReviewPublicOnly();
-                            return telegramClient.sendMessage(chatId, welcome);
-                        }
-                        case CMD_REVIEW -> {
-                            String payload = trimmed.length() > CMD_REVIEW.length()
-                                    ? trimmed.substring(CMD_REVIEW.length()).trim()
-                                    : "";
-                            if (Strings.isBlank(payload)) {
-                                waitingForReviewPayload.add(chatId);
-                                return telegramClient.sendMessage(chatId,
-                                        appMessages.getReviewEmpty());
-                            }
-                            return handleReview(chatId, payload);
-                        }
-                        case CMD_INTERVIEW -> {
-                            return telegramClient.sendMessage(chatId, INTERVIEW_STUB);
-                        }
-                        default -> {
-                            return telegramClient.sendMessage(chatId, HELP);
-                        }
-                    }
+                    String reply = switch (command) {
+                        case CMD_START -> WELCOME;
+                        case CMD_REVIEW -> REVIEW_STUB;
+                        case CMD_INTERVIEW -> INTERVIEW_STUB;
+                        default -> HELP;
+                    };
+                    return telegramClient.sendMessage(chatId, reply);
                 })
                 .then();
-    }
-
-    private Mono<Void> handleReview(Long chatId, String payload) {
-        //add private repos?
-        if (Strings.isBlank(payload)) {
-            return telegramClient.sendMessage(chatId, appMessages.getReviewEmpty());
-        }
-
-        Mono<String> contentToReview = GitHubClient.isGitHubPrUrl(payload)
-                ? githubClient.fetchPrDiff(payload)
-                .filter(Strings::isNotBlank)
-                .switchIfEmpty(Mono.defer(() -> telegramClient.sendMessage(chatId,
-                                appMessages.getReviewPublicOnly())
-                        .then(Mono.empty())))
-                : Mono.just(payload);
-
-        return contentToReview
-                .flatMap(llmClient::review)
-                .flatMap(reviewText -> telegramClient.sendMessage(chatId, reviewText))
-                .onErrorResume(e -> {
-                    Throwable cause = nonNull(e.getCause()) ? e.getCause() : e;
-                    if (cause instanceof TimeoutException) {
-                        return telegramClient.sendMessage(chatId, appMessages.getReviewTimeout());
-                    }
-                    return telegramClient.sendMessage(chatId, appMessages.getReviewError());
-                });
     }
 
     private void logIncomingMessage(Long chatId, String text) {
@@ -120,7 +59,7 @@ public class TelegramUpdateHandler {
         if (command.startsWith("/")) {
             log.info("User request: chatId={}, command={}", chatId, command);
         } else {
-            log.info("User request: chatId={}, type=text, length={}", chatId, text.length());
+            log.info("User request: chatId={}, type=text, text={}", chatId, text);
         }
         log.debug("User request: chatId={}, text={}", chatId, text);
     }

@@ -13,7 +13,6 @@ import java.util.Map;
 import static com.example.util.StringUtil.CHAT_ID;
 import static com.example.util.StringUtil.TELEGRAM_SEND_MESSAGE;
 import static com.example.util.StringUtil.TEXT;
-import static java.util.Objects.nonNull;
 
 @Component
 @RequiredArgsConstructor
@@ -34,7 +33,7 @@ public class TelegramClient {
                 .bodyToMono(TelegramUpdateResponse.class)
                 .doOnNext(resp -> log.debug("getUpdates: offset={}, ok={}, resultSize={}",
                         offset, resp.isOk(),
-                        nonNull(resp.getResult()) ? resp.getResult().size() : 0));
+                        resp.getResult() != null ? resp.getResult().size() : 0));
     }
 
     public Mono<Void> sendMessage(Long chatId, String text) {
