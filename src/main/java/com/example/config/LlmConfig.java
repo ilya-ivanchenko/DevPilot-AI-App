@@ -16,6 +16,10 @@ public class LlmConfig {
     private String baseUrl;
     private String model;
     private Duration timeout;
+    /**
+     * Max number of interview questions before final feedback.
+     */
+    private int interviewMaxQuestions;
     private Prompts prompts = new Prompts();
 
 
@@ -23,5 +27,14 @@ public class LlmConfig {
     @Setter
     public static class Prompts {
         private String reviewSystem;
+        private String interviewSystem;
+        /**
+         * Header text for interview feedback prompt (may contain %s for topic).
+         */
+        private String interviewFinishHeader;
+        /**
+         * Instruction text for interview feedback prompt.
+         */
+        private String interviewFinishInstruction;
     }
 }
