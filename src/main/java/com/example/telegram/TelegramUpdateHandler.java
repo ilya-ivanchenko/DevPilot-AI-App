@@ -2,7 +2,6 @@ package com.example.telegram;
 
 import com.example.config.AppMessagesConfig;
 import com.example.config.LlmConfig;
-import com.example.github.GitHubClient;
 import com.example.llm.LlmClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +17,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
 
+import static com.example.github.GitHubClient.isGitHubPrUrl;
 import static com.example.util.StringUtil.CMD_INTERVIEW;
 import static com.example.util.StringUtil.CMD_REVIEW;
 import static com.example.util.StringUtil.CMD_START;
@@ -34,7 +34,6 @@ public class TelegramUpdateHandler {
     private final TelegramClient telegramClient;
     private final LlmClient llmClient;
     private final AppMessagesConfig appMessages;
-    private final GitHubClient githubClient;
     private final LlmConfig llmConfig;
 
     /**
@@ -144,16 +143,14 @@ public class TelegramUpdateHandler {
             return telegramClient.sendMessage(chatId, appMessages.getReview().getEmpty());
         }
 
-        Mono<String> contentToReview = GitHubClient.isGitHubPrUrl(payload)
-                ? githubClient.fetchPrDiff(payload)
-                .filter(Strings::isNotBlank)
-                .switchIfEmpty(Mono.defer(() -> telegramClient.sendMessage(chatId,
-                                appMessages.getReview().getPublicOnly())
-                        .then(Mono.empty())))
-                : Mono.just(payload);
+        Mono<String> reviewMono;
+        if (isGitHubPrUrl(payload)) {
+            reviewMono = llmClient.reviewWithPrTool(payload);
+        } else {
+            reviewMono = llmClient.review(payload);
+        }
 
-        return contentToReview
-                .flatMap(llmClient::review)
+        return reviewMono
                 .flatMap(reviewText -> telegramClient.sendMessage(chatId, reviewText)
                         .then(telegramClient.sendMessage(chatId, HELP)))
                 .onErrorResume(e -> {
